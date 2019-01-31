@@ -1096,7 +1096,8 @@ bool RtmpChunkStream::ReceiveVideoMessage(std::shared_ptr<ImportMessage> &messag
                                                   _app_id,
                                                   _stream_id,
                                                   message->message_header->timestamp,
-                                                  message->body);
+                                                  message->body,
+                                                  frame_type);
 
 
         // KeyFrame 간격 출력

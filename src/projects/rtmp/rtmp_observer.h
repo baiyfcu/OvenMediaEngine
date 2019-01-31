@@ -19,7 +19,7 @@ public:
 	virtual bool OnStreamReadyComplete(const ov::String &app_name, const ov::String &stream_name, std::shared_ptr<RtmpMediaInfo> &media_info, info::application_id_t &application_id, uint32_t &stream_id) = 0;
 
 	// video 스트림 데이트 수신
-	virtual bool OnVideoData(info::application_id_t application_id, uint32_t stream_id, uint32_t timestamp, std::shared_ptr<std::vector<uint8_t>> &data) = 0;
+	virtual bool OnVideoData(info::application_id_t application_id, uint32_t stream_id, uint32_t timestamp, std::shared_ptr<std::vector<uint8_t>> &data, RtmpFrameType frame_type) = 0;
 
 	// audio 스트림 데이터 수신
 	virtual bool OnAudioData(info::application_id_t application_id, uint32_t stream_id, uint32_t timestamp, std::shared_ptr<std::vector<uint8_t>> &data) = 0;

@@ -22,6 +22,8 @@ MediaRouteStream::MediaRouteStream(std::shared_ptr<StreamInfo> stream_info)
 	_stream_info = stream_info;
 	_stream_info->ShowInfo();
 
+	_sps_rbsp = std::make_shared<std::vector<uint8_t>>();
+
 	time(&_last_rb_time);
 }
 
@@ -130,4 +132,9 @@ uint32_t MediaRouteStream::Size()
 time_t MediaRouteStream::getLastReceivedTime()
 {
 	return _last_rb_time;
+}
+
+std::shared_ptr<std::vector<uint8_t>> MediaRouteStream::GetSpsRbsp()
+{
+	return _sps_rbsp;
 }

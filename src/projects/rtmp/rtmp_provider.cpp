@@ -205,7 +205,8 @@ bool RtmpProvider::OnStreamReadyComplete(const ov::String &app_name,
 bool RtmpProvider::OnVideoData(info::application_id_t application_id,
                                 uint32_t stream_id,
                                 uint32_t timestamp,
-                               std::shared_ptr<std::vector<uint8_t>> &data)
+                               std::shared_ptr<std::vector<uint8_t>> &data,
+                               RtmpFrameType frame_type)
 {
     auto application = std::dynamic_pointer_cast<RtmpApplication>(GetApplicationById(application_id));
 
@@ -223,13 +224,14 @@ bool RtmpProvider::OnVideoData(info::application_id_t application_id,
     }
 
     auto pbuf = std::make_unique<MediaPacket>(MediaType::Video,
-                                                0,
-                                                data->data(),
-                                                data->size(),
-                                                timestamp,
-                                                MediaPacketFlag::NoFlag);
+                                              0,
+                                              data->data(),
+                                              data->size(),
+                                              timestamp,
+                                              (frame_type == RtmpFrameType::VideoIFrame) ?
+                                              MediaPacketFlag::Key : MediaPacketFlag::NoFlag);
 
-    application->SendFrame(stream, std::move(pbuf));
+	application->SendFrame(stream, std::move(pbuf));
 
     return true;
 }

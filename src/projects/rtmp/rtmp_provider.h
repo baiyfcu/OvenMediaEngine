@@ -60,7 +60,8 @@ public:
     bool OnVideoData(info::application_id_t application_id,
                      uint32_t stream_id,
                      uint32_t timestamp,
-                     std::shared_ptr<std::vector<uint8_t>> &data) override;
+                     std::shared_ptr<std::vector<uint8_t>> &data,
+                     RtmpFrameType frame_type) override;
 
     bool OnAudioData(info::application_id_t application_id,
                      uint32_t stream_id,

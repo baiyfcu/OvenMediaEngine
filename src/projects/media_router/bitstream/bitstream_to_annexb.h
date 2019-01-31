@@ -13,6 +13,12 @@
 #include "base/media_route/media_type.h"
 #include <stdint.h>
 
+#define NAL_UNIT_TYPE_SPS       (0x07)
+#define NAL_UNIT_TYPE_PPS       (0x08)
+#define NAL_UNIT_TYPE_IDR       (0x05)
+#define NAL_UNIT_SIZE           (4)
+#define NAL_PPS_PAYLOAD_SIZE    (4)
+
 class BitstreamToAnnexB
 {
 public:

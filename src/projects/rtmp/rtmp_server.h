@@ -66,7 +66,8 @@ protected:
                                 info::application_id_t application_id,
                                 uint32_t stream_id,
                                 uint32_t timestamp,
-                                std::shared_ptr<std::vector<uint8_t>> &data) override;
+                                std::shared_ptr<std::vector<uint8_t>> &data,
+                                RtmpFrameType frame_type) override;
 
     bool OnChunkStreamAudioData(ov::ClientSocket *remote,
                                 info::application_id_t application_id,

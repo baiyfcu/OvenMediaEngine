@@ -60,5 +60,11 @@ private:
 
 	// 마지막으로 받은 패킷의 시간
 	time_t _last_rb_time;
+
+	// SPS Raw Byte Sequence Payload
+public:
+	std::shared_ptr<std::vector<uint8_t>> GetSpsRbsp();
+private:
+	std::shared_ptr<std::vector<uint8_t>> _sps_rbsp;
 };
 

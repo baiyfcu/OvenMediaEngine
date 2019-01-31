@@ -448,6 +448,7 @@ void MediaRouteApplication::MainTask()
 		}
 
 		auto cur_buf = stream->Pop();
+		auto sps_rbsp = stream->GetSpsRbsp();
 
 		if(cur_buf)
 		{
@@ -551,6 +552,84 @@ void MediaRouteApplication::MainTask()
 
 							auto fragmentation = std::make_unique<FragmentationHeader>();
 							::memcpy(fragmentation.get(), cur_buf->_frag_hdr.get(), sizeof(FragmentationHeader));
+
+// bypass
+#if 1
+							if(encoded_frame->frame_type == FrameType::VideoFrameKey)
+							{
+								int nalu_type = (encoded_frame->buffer[NAL_UNIT_SIZE] & 0x1F);
+
+								if(nalu_type == NAL_UNIT_TYPE_SPS)
+								{
+									/*
+									 * 00 | 00 00 00 01 67 42 C0 1F DA 01 40 16 E8 40 00 00 | ....gB....@..@..
+									 * 10 | 03 00 40 00 00 0F 23 C6 0C A8 00 00 00 01 68 CE | ..@...#.......h.
+									 * 20 | 3C 80 03 7C D3 7F 00 00 F5 02 00 00 00 00 00 00 | <..|............
+									 * 30 | 02 00 00 00 78 00 00 00 3C 00 00 00 01 00 00 00 | ....x...<.......
+									 */
+									sps_rbsp->resize(encoded_frame->length);
+									std::copy(encoded_frame->buffer, encoded_frame->buffer + encoded_frame->length, sps_rbsp->begin());
+
+									fragmentation->fragmentation_offset[0] = NAL_UNIT_SIZE;
+									// 4 = PPS(4)
+									fragmentation->fragmentation_offset[1] = encoded_frame->length - NAL_PPS_PAYLOAD_SIZE;
+
+									// 12 = total_length - (NAL_UNIT_SIZE + NAL_UNIT_SIZE + PPS(4))
+									fragmentation->fragmentation_length[0] = encoded_frame->length - 12;
+									fragmentation->fragmentation_length[1] = NAL_PPS_PAYLOAD_SIZE;
+
+									fragmentation->fragmentation_vector_size = 2;
+								}
+								else if(nalu_type == NAL_UNIT_TYPE_IDR)
+								{
+									/*
+									 * 00 | 00 00 00 01 65 88 82 2F F7 E1 C4 88 35 14 00 04 | ....e../....5...
+									 * 10 | 01 E1 7A 85 BE DB D2 95 8B 3C 79 73 41 CC 54 70 | ..z......<ysA.Tp
+									 * 20 | 18 E3 F0 C4 35 63 1E BE F5 9B 12 99 BB 7F 4F 50 | ....5c........OP
+									 * 30 | A6 02 AB 9C DF 7F D3 97 58 7F FE 97 2B 33 65 27 | ........X...+3e'
+									 */
+
+									//auto newbuff = std::make_shared<std::vector<uint8_t>>();
+
+									uint8_t *newbuf = new uint8_t[encoded_frame->length + sps_rbsp->size()];
+									::memcpy(newbuf, &sps_rbsp->front(), sps_rbsp->size());
+									::memcpy(newbuf + sps_rbsp->size(), encoded_frame->buffer, encoded_frame->length);
+
+									int newlen = encoded_frame->length + sps_rbsp->size();
+
+									fragmentation->fragmentation_offset[0] = NAL_UNIT_SIZE;
+									fragmentation->fragmentation_offset[1] = sps_rbsp->size() - NAL_PPS_PAYLOAD_SIZE;
+									fragmentation->fragmentation_offset[2] = sps_rbsp->size() + NAL_UNIT_SIZE;
+
+									// 12 = total_length - (NAL_UNIT_SIZE + NAL_UNIT_SIZE + PPS(4))
+									fragmentation->fragmentation_length[0] = sps_rbsp->size() - 12;
+									fragmentation->fragmentation_length[1] = NAL_PPS_PAYLOAD_SIZE;
+									fragmentation->fragmentation_length[2] = encoded_frame->length - NAL_UNIT_SIZE;
+
+									fragmentation->fragmentation_vector_size = 3;
+
+									std::swap(encoded_frame->buffer, newbuf);
+									delete [] newbuf;
+								}
+								else
+								{
+									/*
+									 * This frame need not be used (!SPS && !PPS)
+									 * 00 | 00 00 00 01 06 05 FF FF BB DC 45 E9 BD E6 D9 48 | ..........E....H
+									 * 10 | B7 96 2C D8 20 D9 23 EE EF 78 32 36 34 20 2D 20 | ..,. .#..x264 -
+									 * 20 | 63 6F 72 65 20 31 34 38 20 72 32 36 34 33 20 35 | core 148 r2643 5
+									 * 30 | 63 36 35 37 30 34 20 2D 20 48 2E 32 36 34 2F 4D | c65704 - H.264/M
+									 */
+									continue;
+								}
+							}
+							else
+							{
+								fragmentation->fragmentation_offset[0] = NAL_UNIT_SIZE;
+								fragmentation->fragmentation_length[0] = encoded_frame->length - NAL_UNIT_SIZE;
+								fragmentation->fragmentation_vector_size = 1;
+							}
+#endif
 
 							// logtd("send to publisher (1000k cr):%u, (90k cr):%u", cur_buf->GetPts(), encoded_frame->_timeStamp);
 							observer->OnSendVideoFrame(

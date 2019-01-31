@@ -38,7 +38,8 @@ public:
                             info::application_id_t applicaiton_id,
                             uint32_t stream_id,
                            uint32_t timestamp,
-                           std::shared_ptr<std::vector<uint8_t>> &data) = 0;
+                           std::shared_ptr<std::vector<uint8_t>> &data,
+                           RtmpFrameType frame_type) = 0;
 
     virtual bool
     OnChunkStreamAudioData(ov::ClientSocket *remote,

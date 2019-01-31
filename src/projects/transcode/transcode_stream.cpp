@@ -223,8 +223,8 @@ TranscodeStream::TranscodeStream(const info::Application &application_info, std:
 	{
 		_kill_flag = false;
 
-		_thread_decode = std::thread(&TranscodeStream::DecodeTask, this);
-		_thread_filter = std::thread(&TranscodeStream::FilterTask, this);
+		//_thread_decode = std::thread(&TranscodeStream::DecodeTask, this);
+		//_thread_filter = std::thread(&TranscodeStream::FilterTask, this);
 		_thread_encode = std::thread(&TranscodeStream::EncodeTask, this);
 	}
 	catch(const std::system_error &e)
@@ -538,21 +538,24 @@ void TranscodeStream::EncodeTask()
 {
 	logtd("Started transcode stream encode thread");
 
+	CreateStreams();
+
 	while(!_kill_flag)
 	{
-		// 큐에 있는 인코딩된 패킷을 읽어옴
-		auto frame = _queue_filterd.pop_unique();
-		if(frame == nullptr)
+		auto packet = _queue.pop_unique();
+
+		common::MediaType media_type = packet->GetMediaType();
+
+		if (media_type == common::MediaType::Video)
 		{
-			// logtw("invliad media buffer");
-			continue;
+			packet->SetTrackId(97);
+			SendFrame(std::move(packet));
 		}
 
-		// 패킷의 트랙 아이디를 조회
-		int32_t track_id = frame->GetTrackId();
-
-		// logtd("Stage-1-2 : %f", (float)frame->GetPts());
-		do_encode(track_id, std::move(frame));
+		if (media_type == common::MediaType::Audio)
+		{
+			continue;
+		}
 	}
 
 	logtd("Terminated transcode stream encode thread");

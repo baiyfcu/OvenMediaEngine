@@ -289,12 +289,13 @@ bool RtmpServer::OnChunkStreamVideoData(ov::ClientSocket *remote,
                                         info::application_id_t application_id,
                                         uint32_t stream_id,
                                         uint32_t timestamp,
-                                        std::shared_ptr<std::vector<uint8_t>> &data)
+                                        std::shared_ptr<std::vector<uint8_t>> &data,
+                                        RtmpFrameType frame_type)
 {
     // observer들에게 알림
     for(auto &observer : _observers)
     {
-        if(!observer->OnVideoData(application_id, stream_id, timestamp, data))
+        if(!observer->OnVideoData(application_id, stream_id, timestamp, data, frame_type))
         {
             logte("Rtmp video data fail - app(%u) stream(%u) client(%s)",
                     application_id,

@@ -25,6 +25,10 @@ namespace cfg
 			return _server;
 		}
 
+		static int edge_siginaling_port;
+		static int edge_candidate_port;
+		static int edge_logging_size;
+
 		//
 		//std::shared_ptr<ServerInfo> GetServer() const noexcept;
 		//

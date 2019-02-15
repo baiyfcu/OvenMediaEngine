@@ -287,5 +287,15 @@ namespace ov
 		int _srt_epoll = SRT_INVALID_SOCK;
 		epoll_event *_epoll_events = nullptr;
 		int _last_epoll_event_count = 0;
+
+
+
+		// Temporary code for edge testing
+		SRT_MSGCTRL _msg_ctrl_old = {0,};
+		uint32_t _packet_disorder_count = 0;
+		uint32_t _packet_count = 0;
+		uint32_t _packet_loss_count = 0;
+		uint64_t _packet_start_time = 0;
+		ssize_t _packet_read_bytes = 0;
 	};
 }

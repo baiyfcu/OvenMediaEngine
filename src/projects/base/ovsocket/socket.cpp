@@ -17,6 +17,10 @@
 #include <base/ovlibrary/ovlibrary.h>
 #include <errno.h>
 
+#include <srt/srt.h>
+#include <chrono>
+#include <config/config_manager.h>
+
 namespace ov
 {
 	Socket::Socket()
@@ -794,9 +798,11 @@ namespace ov
 			case SocketType::Srt:
 				while(remained > 0L)
 				{
+					SRT_MSGCTRL msg_ctrl;
+					::memset(&msg_ctrl, 0, sizeof(SRT_MSGCTRL));
 					// SRT limits packet size up to 1316
 					int to_send = std::min(1316, static_cast<int>(remained));
-					int sent = ::srt_send(_socket.GetSocket(), reinterpret_cast<const char *>(data_to_send), to_send);
+					int sent = ::srt_sendmsg2(_socket.GetSocket(), reinterpret_cast<const char *>(data_to_send), to_send, &msg_ctrl);
 
 					if(sent == -1L)
 					{
@@ -884,9 +890,61 @@ namespace ov
 				break;
 
 			case SocketType::Srt:
-				read_bytes = ::srt_recv(_socket.GetSocket(), reinterpret_cast<char *>(data->GetWritableData()), static_cast<int>(data->GetLength()));
-				break;
+			{
+				SRT_MSGCTRL msg_ctrl;
+				read_bytes = ::srt_recvmsg2(_socket.GetSocket(),
+				                            reinterpret_cast<char *>(data->GetWritableData()),
+				                            static_cast<int>(data->GetLength()), &msg_ctrl);
 
+				uint64_t cur_time = std::chrono::duration_cast<std::chrono::microseconds>(
+					std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+
+				_packet_read_bytes += read_bytes;
+
+				if(_packet_start_time == 0)
+				{
+					_packet_start_time = cur_time;
+				}
+
+				_packet_count++;
+
+				if(msg_ctrl.msgno != (_msg_ctrl_old.msgno + 1))
+				{
+					_packet_loss_count++;
+				}
+
+				if(msg_ctrl.msgno <= _msg_ctrl_old.msgno || msg_ctrl.pktseq <= _msg_ctrl_old.pktseq)
+				{
+					_packet_disorder_count++;
+				}
+
+				if (_packet_count % cfg::ConfigManager::edge_logging_size == 0)
+				{
+					// TODO Get Average Elapsed per edge_logging_size
+
+					float packet_duration = (float)(cur_time - _packet_start_time) / (float)1000000; // microsecond to second
+
+					fprintf(stderr, "#%08d SEQ=%d, LOSS=%d, DISORDER=%d, ELAPSED=%0.3f(ms), (S=%ld, C=%ld), Kbps=%0.0f, pps=%0.0f\n",
+					        msg_ctrl.msgno,
+					        msg_ctrl.pktseq,
+					        _packet_loss_count,
+					        _packet_disorder_count,
+					        (float)(cur_time - msg_ctrl.srctime) / (float)cfg::ConfigManager::edge_logging_size,
+					        msg_ctrl.srctime,
+					        cur_time,
+					        ((float)_packet_read_bytes / packet_duration) * 0.008, // bps
+					        (float)cfg::ConfigManager::edge_logging_size / packet_duration // pps
+					        );
+
+					_packet_start_time = 0;
+					_packet_read_bytes = 0;
+				}
+
+				::memcpy(&_msg_ctrl_old, &msg_ctrl, sizeof(SRT_MSGCTRL));
+
+				//read_bytes = ::srt_recv(_socket.GetSocket(), reinterpret_cast<char *>(data->GetWritableData()), static_cast<int>(data->GetLength()));
+				break;
+			}
 			default:
 				break;
 		}

@@ -1,0 +1,74 @@
+#!/bin/bash
+
+trap ctrl_c INT
+
+function ctrl_c() {
+    /usr/bin/pkill OvenMediaEngine
+    sleep 1
+
+    RESULT=$(ps -ef | grep OvenMediaEngine | sed -e /grep/d | wc -l)
+    [ $RESULT != 0 ] && echo "Please kill OvenMediaEngine manually"
+
+    END=`date +%s.%N`
+    RUN_TIME=$(echo "$END - $START" | bc)
+    LOGFILE_COUNT=$(ls $LOG_DIR | wc -l)
+
+cat << EOF > $LOG_DIR/RESULT.txt
+
+*************************************
+*               Result              *
+*************************************
+ - Edge Count      : $LOGFILE_COUNT
+ - Packet Bundle   : $PACKET_BUNDLE
+ - Test Time       : $RUN_TIME
+ - Average Elapsed : $PACKET_ELAPSED
+ - Average bps     : $PACKET_BPS
+ - Average pps     : $PACKET_PPS
+ - Packet Loss     : ($PACKET_LOSS/$PACKET_COUNT)
+ - Packet Disorder : ($PACKET_DISORDER/$PACKET_COUNT)
+EOF
+    cat $LOG_DIR/RESULT.txt
+
+    NOW=$(date +"%Y%m%d%H%M%S")
+    /bin/tar cvzfP $NOW.tar.gz $LOG_DIR* > /dev/null
+
+    echo "Archiving log file " $NOW.tar.gz
+    exit
+}
+
+EDGE_COUNT=$1
+PACKET_BUNDLE=$2
+START=`date +%s.%N`
+OS_UBUNTU=$(cat /etc/issue | grep Ubuntu)
+NTPDATE=$(which ntpdate)
+LOG_DIR=${HOME}/edge_log
+OME_BIN="./src/bin/DEBUG/OvenMediaEngine"
+
+if [ "x$NTPDATE" == "x" ]; then
+    if [ "x$OS_UBUNTU" == "x" ]; then
+        yum -y install ntpdate
+    else
+        sudo apt-get install ntpdate
+    fi
+fi
+
+mkdir -p $LOG_DIR
+rm -rf $LOG_DIR/*
+
+#ntpdate -d time.bora.net
+
+[ "x$EDGE_COUNT" == "x" ] && echo "Please set the number of edge server" && exit
+[ "x$PACKET_BUNDLE" == "x" ] && echo "Please set the number of packet for logging " && exit
+
+for ((i=1;i<=$EDGE_COUNT;i++));
+do 
+	SIGNAL_PORT=$((3333 + $i))
+	CANDIDATE_PORT=$((10000 + $i))
+	LOG=$LOG_DIR/$CANDIDATE_PORT.dump
+
+	#./OvenMediaEngine $SIGNAL_PORT $CANDIDATE_PORT > $LOG 2>&1 &
+	$OME_BIN $SIGNAL_PORT $CANDIDATE_PORT $PACKET_BUNDLE > /dev/null 2> $LOG &
+	sleep 0.1
+done
+
+watch "netstat -pl | grep src/bin && ps -ef | grep Oven | sed -e /grep/d"

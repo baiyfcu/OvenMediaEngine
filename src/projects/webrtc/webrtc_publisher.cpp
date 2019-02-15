@@ -249,7 +249,9 @@ uint16_t WebRtcPublisher::GetSignallingPort()
 {
 	int port = _publisher_info->GetSignalling().GetPort();
 
-	return static_cast<uint16_t>((port == 0) ? 3333 : port);
+//	return static_cast<uint16_t>((port == 0) ? 3333 : port);
+	logtw("edge_siginaling_port=%d, port=%d", cfg::ConfigManager::edge_siginaling_port, port);
+	return static_cast<uint16_t>((port == 0) ? cfg::ConfigManager::edge_siginaling_port : port);
 }
 
 ov::String WebRtcPublisher::GetCandidateIP()
@@ -265,7 +267,9 @@ uint16_t WebRtcPublisher::GetCandidatePort()
 
 	int port = ov::Converter::ToUInt16(tokens[0]);
 
-	return static_cast<uint16_t>((port == 0) ? 10000 : port);
+	//return static_cast<uint16_t>((port == 0) ? 10000 : port);
+	logtw("edge_candidate_port=%d, port=%d", cfg::ConfigManager::edge_candidate_port, port);
+	return static_cast<uint16_t>((port == 0) ? cfg::ConfigManager::edge_candidate_port : port);
 }
 
 ov::String WebRtcPublisher::GetCandidateProto()

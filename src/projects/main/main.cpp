@@ -17,10 +17,28 @@
 #include <base/ovcrypto/ovcrypto.h>
 #include <base/ovlibrary/stack_trace.h>
 
+int cfg::ConfigManager::edge_siginaling_port = 0;
+int cfg::ConfigManager::edge_candidate_port  = 0;
+int cfg::ConfigManager::edge_logging_size = 0;
+
 void SrtLogHandler(void *opaque, int level, const char *file, int line, const char *area, const char *message);
 
-int main()
+int main(int argc, char *argv[])
 {
+	if (argc == 4)
+	{
+		cfg::ConfigManager::edge_siginaling_port = atoi(argv[1]);
+		cfg::ConfigManager::edge_candidate_port = atoi(argv[2]);
+		cfg::ConfigManager::edge_logging_size = atoi(argv[3]);
+
+		fprintf(stderr, "***SRT PACKET TEST***\n");
+		fprintf(stderr, "siginaling_port=%d, candidate_port=%d, logging_size=%d\n",
+			cfg::ConfigManager::edge_siginaling_port,
+			cfg::ConfigManager::edge_candidate_port,
+			cfg::ConfigManager::edge_logging_size
+			);
+	}
+
 	logtd("Trying to initialize StackTrace...");
 	ov::StackTrace::InitializeStackTrace(OME_VERSION);
 

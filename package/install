@@ -1,0 +1,79 @@
+#!/bin/bash
+
+NTPDATE=$(which ntpdate)
+NETSTAT=$(which netstat)
+IFTOP=$(which iftop)
+ATOP=$(which atop)
+OS_UBUNTU=$(cat /etc/issue | grep Ubuntu)
+OME=OvenMediaEngine
+
+ROLE=$1
+ORIGIN_IP=$2
+LOCAL_IP=$(ip a | grep global | awk '{print $2}' |  cut -f1 -d"/")
+
+if [ "x$ROLE" == "x" ]; then
+    echo "select role [origin_server] [edge_server]"
+    exit
+fi
+
+if [ "x$ROLE" == "xorigin_server" ]; then
+
+    cp -f conf/_Origin.xml conf/Server.xml
+
+    sed -i -e "s/@LOCAL_IP/$LOCAL_IP/g" "conf/Server.xml"
+
+    echo "=== Origin Server ==="
+    echo "IP="$LOCAL_IP
+
+elif [ "x$ROLE" == "xedge_server" ]; then
+
+    if [ "x$ORIGIN_IP" == "x" ]; then
+        echo "origin ip address required"
+        exit
+    fi
+
+    PUBLISHER_IP=$(curl ifconfig.me 2>/dev/null)
+
+    cp -f conf/_Edge.xml conf/Server.xml
+
+    sed -i -e "s/@ORIGIN_IP/$ORIGIN_IP/g" "conf/Server.xml"
+    sed -i -e "s/@LOCAL_IP/$LOCAL_IP/g" "conf/Server.xml"
+    sed -i -e "s/@PUBLISHER_IP/$PUBLISHER_IP/g" "conf/Server.xml"
+
+    echo "=== Edge Server ==="
+    echo "IP="$LOCAL_IP
+    echo "ORIGIN IP="$ORIGIN_IP
+    echo "PUBLISHER IP="$PUBLISHER_IP
+else
+    echo "select role [origin|edge]"
+    exit
+fi
+
+if [ "x$OS_UBUNTU" == "x" ]; then
+    echo "This system currently only supports Ubuntu18.04"
+    exit
+fi
+
+if [ "x$NTPDATE" == "x" ]; then
+    sudo apt-get update > /dev/null 2>&1
+    echo "Please wait until apt-get update to complete for installing monitoring tools"
+
+    sudo apt-get -y install ntpdate
+fi
+
+if [ "x$NETSTAT" == "x" ]; then
+    sudo apt-get -y install net-tools
+fi
+
+if [ "x$IFTOP" == "x" ]; then
+    sudo apt-get -y install iftop
+fi
+
+if [ "x$ATOP" == "x" ]; then
+    sudo apt-get -y install atop
+fi
+
+echo "Please wait for the ntpdate to complete"
+ntpdate -d time.bora.net >/dev/null
+
+

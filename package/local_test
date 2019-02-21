@@ -1,0 +1,15 @@
+#!/bin/bash
+
+OME="OvenMediaEngine.tar.gz"
+
+rm -rf test_origin
+rm -rf test_edge
+
+mkdir -p test_origin
+mkdir -p test_edge
+
+cp -rf $OME test_origin
+cp -rf $OME test_edge
+
+(cd test_origin; tar xvf $OME)
+(cd test_edge; tar xvf $OME)

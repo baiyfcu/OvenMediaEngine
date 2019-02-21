@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Logger>
+    <!-- Log level: [debug, info, warn, error, critical] -->
+
+    <Tag name="Ice" level="error" />
+    <Tag name="Transcoder" level="error" />
+    <Tag name="MediaRouter.*" level="error" />
+    <Tag name="StreamInfo" level="error" />
+    <Tag name="DTLS" level="error" />
+    <Tag name="Config" level="error" />
+    <Tag name="OVLibrary" level="error" />
+    <Tag name="RtpRtcp" level="error" />
+    <Tag name="TranscodeCodec" level="error" />
+    <Tag name=".*\.Packet" level="error" />
+    <Tag name="Config" level="error" />
+    <Tag name=".*" level="error" />
+</Logger>

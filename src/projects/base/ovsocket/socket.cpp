@@ -21,6 +21,8 @@
 #include <chrono>
 #include <config/config_manager.h>
 
+#include "relay/relay_datastructure.h"
+
 namespace ov
 {
 	Socket::Socket()
@@ -882,6 +884,9 @@ namespace ov
 
 		ssize_t read_bytes = -1;
 
+		SRT_MSGCTRL msg_ctrl;
+		::memset(&msg_ctrl, 0, sizeof(SRT_MSGCTRL));
+
 		switch(GetType())
 		{
 			case SocketType::Udp:
@@ -891,56 +896,81 @@ namespace ov
 
 			case SocketType::Srt:
 			{
-				SRT_MSGCTRL msg_ctrl;
 				read_bytes = ::srt_recvmsg2(_socket.GetSocket(),
 				                            reinterpret_cast<char *>(data->GetWritableData()),
 				                            static_cast<int>(data->GetLength()), &msg_ctrl);
 
-				uint64_t cur_time = std::chrono::duration_cast<std::chrono::microseconds>(
-					std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-
-				_packet_read_bytes += read_bytes;
-
-				if(_packet_start_time == 0)
-				{
-					_packet_start_time = cur_time;
-				}
-
-				_packet_count++;
-
-				if(msg_ctrl.msgno != (_msg_ctrl_old.msgno + 1))
-				{
-					_packet_loss_count++;
-				}
-
-				if(msg_ctrl.msgno <= _msg_ctrl_old.msgno || msg_ctrl.pktseq <= _msg_ctrl_old.pktseq)
-				{
-					_packet_disorder_count++;
-				}
-
-				if (_packet_count % cfg::ConfigManager::edge_logging_size == 0)
-				{
-					// TODO Get Average Elapsed per edge_logging_size
-
-					float packet_duration = (float)(cur_time - _packet_start_time) / (float)1000000; // microsecond to second
-
-					fprintf(stderr, "#%08d SEQ=%d, LOSS=%d, DISORDER=%d, ELAPSED=%0.3f(ms), (S=%ld, C=%ld), Kbps=%0.0f, pps=%0.0f\n",
-					        msg_ctrl.msgno,
-					        msg_ctrl.pktseq,
-					        _packet_loss_count,
-					        _packet_disorder_count,
-					        (float)(cur_time - msg_ctrl.srctime) / (float)cfg::ConfigManager::edge_logging_size,
-					        msg_ctrl.srctime,
-					        cur_time,
-					        ((float)_packet_read_bytes / packet_duration) * 0.008, // bps
-					        (float)cfg::ConfigManager::edge_logging_size / packet_duration // pps
-					        );
-
-					_packet_start_time = 0;
-					_packet_read_bytes = 0;
-				}
-
-				::memcpy(&_msg_ctrl_old, &msg_ctrl, sizeof(SRT_MSGCTRL));
+				//uint64_t cur_time = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(
+				//	std::chrono::high_resolution_clock::now().time_since_epoch()).count());
+				//
+				//RelayPacket packet(data.get());
+				//
+				//fprintf(stderr, "msg_ctrl.srctime=%ld\n", msg_ctrl.srctime);
+				//
+				//_packet_read_bytes += read_bytes;
+				//
+				//if(_packet_start_time == 0)
+				//{
+				//	_packet_start_time = cur_time;
+				//}
+				//
+				//_packet_count++;
+				//
+				//if(msg_ctrl.msgno != (_msg_ctrl_old.msgno + 1))
+				//{
+				//	fprintf(stderr,
+				//		"msg_ctrl.msgno=%d, _msg_ctrl_old.msgno=%d\n",
+				//		msg_ctrl.msgno,
+				//		_msg_ctrl_old.msgno );
+				//	_packet_loss_count++;
+				//}
+				//
+				//if(msg_ctrl.msgno <= _msg_ctrl_old.msgno || msg_ctrl.pktseq <= _msg_ctrl_old.pktseq)
+				//{
+				//	fprintf(stderr,
+				//		"msg_ctrl.msgno=%d, _msg_ctrl_old.msgno=%d\n",
+				//		msg_ctrl.msgno,
+				//		_msg_ctrl_old.msgno);
+				//	_packet_disorder_count++;
+				//}
+				//
+				//_packet_latency_sum += (cur_time - msg_ctrl.srctime);
+				//
+				//if (cfg::ConfigManager::edge_logging_size && _packet_count % cfg::ConfigManager::edge_logging_size == 0)
+				//{
+				//	// TODO Get Average Elapsed per edge_logging_size
+				//
+				//	float packet_duration = (float)(cur_time - _packet_start_time) / (float)1000000; // microsecond to second
+				//
+				//	if (packet_duration == 0)
+				//	{
+				//		fprintf(stderr, "abnormal data, packet_duration=0");
+				//	}
+				//	else
+				//	{
+				//		fprintf(stderr, "#%08d SEQ=%d LOSS=%d DISORDER=%d LATENCY=%0.3f (S=%ld,C=%ld) Kbps=%0.0f pps=%0.0f\n",
+				//		        msg_ctrl.msgno,
+				//		        msg_ctrl.pktseq,
+				//		        _packet_loss_count,
+				//		        _packet_disorder_count,
+				//		        (float)_packet_latency_sum / (float)cfg::ConfigManager::edge_logging_size,
+				//		        msg_ctrl.srctime,
+				//		        cur_time,
+				//		        ((float)_packet_read_bytes / packet_duration) * 0.008, // bps
+				//		        (float)cfg::ConfigManager::edge_logging_size / packet_duration // pps
+				//		);
+				//	}
+				//
+				//	_packet_start_time = 0;
+				//	_packet_read_bytes = 0;
+				//	_packet_loss_count = 0;
+				//	_packet_disorder_count = 0;
+				//	_packet_latency_sum = 0;
+				//	_packet_count = 0;
+				//
+				//}
+				//
+				//::memcpy(&_msg_ctrl_old, &msg_ctrl, sizeof(SRT_MSGCTRL));
 
 				//read_bytes = ::srt_recv(_socket.GetSocket(), reinterpret_cast<char *>(data->GetWritableData()), static_cast<int>(data->GetLength()));
 				break;
@@ -1026,6 +1056,83 @@ namespace ov
 			logtd("[%p] [#%d] %zd bytes read", this, _socket.GetSocket(), read_bytes);
 
 			data->SetLength(static_cast<size_t>(read_bytes));
+
+			// for logging for srt
+
+			if(GetType() != SocketType ::Srt) {
+				return nullptr;
+			}
+
+			uint64_t cur_time = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(
+				std::chrono::high_resolution_clock::now().time_since_epoch()).count());
+
+			_packet_read_bytes += read_bytes;
+
+			if(_packet_start_time == 0)
+			{
+				_packet_start_time = cur_time;
+			}
+
+			_packet_count++;
+
+			if(msg_ctrl.msgno != (_msg_ctrl_old.msgno + 1))
+			{
+				fprintf(stderr,
+				        "msg_ctrl.msgno=%d, _msg_ctrl_old.msgno=%d\n",
+				        msg_ctrl.msgno,
+				        _msg_ctrl_old.msgno );
+				_packet_loss_count++;
+			}
+
+			if(msg_ctrl.msgno <= _msg_ctrl_old.msgno || msg_ctrl.pktseq <= _msg_ctrl_old.pktseq)
+			{
+				fprintf(stderr,
+				        "msg_ctrl.msgno=%d, _msg_ctrl_old.msgno=%d\n",
+				        msg_ctrl.msgno,
+				        _msg_ctrl_old.msgno);
+				_packet_disorder_count++;
+			}
+
+			RelayPacket packet(data.get());
+			_packet_latency_sum += (cur_time - packet.srctime);
+
+			if (_packet_count &&
+				cfg::ConfigManager::edge_logging_size &&
+				_packet_count % cfg::ConfigManager::edge_logging_size == 0)
+			{
+				// TODO Get Average Elapsed per edge_logging_size
+
+				float packet_duration = (float)(cur_time - _packet_start_time) / (float)1000000; // microsecond to second
+
+				if (packet_duration == 0)
+				{
+					fprintf(stderr, "abnormal data, packet_duration=0");
+				}
+				else
+				{
+					fprintf(stderr, "#%08d SEQ=%d LOSS=%d DISORDER=%d LATENCY=%0.3f (S=%ld,C=%ld) Kbps=%0.0f pps=%0.0f\n",
+					        msg_ctrl.msgno,
+					        msg_ctrl.pktseq,
+					        _packet_loss_count,
+					        _packet_disorder_count,
+					        (float)(_packet_latency_sum / 1000) / (float)cfg::ConfigManager::edge_logging_size,
+					        packet.srctime,
+					        cur_time,
+					        ((float)_packet_read_bytes / packet_duration) * 0.008, // bps
+					        (float)cfg::ConfigManager::edge_logging_size / packet_duration // pps
+					);
+				}
+
+				_packet_start_time = 0;
+				_packet_read_bytes = 0;
+				_packet_loss_count = 0;
+				_packet_disorder_count = 0;
+				_packet_latency_sum = 0;
+				_packet_count = 0;
+
+			}
+
+			::memcpy(&_msg_ctrl_old, &msg_ctrl, sizeof(SRT_MSGCTRL));
 		}
 
 		return nullptr;

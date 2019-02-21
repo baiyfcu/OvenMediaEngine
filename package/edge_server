@@ -1,0 +1,96 @@
+#!/bin/bash
+
+trap ctrl_c INT
+
+function ctrl_c() {
+    #pgrep OvenMediaEngine | xargs sudo kill -9
+    /usr/bin/pkill OvenMediaEngine
+    sleep 1
+
+    RESULT=$(ps -ef | grep OvenMediaEngine | sed -e /grep/d | wc -l)
+    [ $RESULT != 0 ] && echo "Please kill OvenMediaEngine manually"
+
+    END=`date +%s.%2N`
+    RUN_TIME=$(echo "$END - $START" | bc)
+    LOGFILE_COUNT=$(ls $LOG_DIR | wc -l)
+
+    END_NETIF=$(date +"%Y/%m/%d %H:%M:%S")
+    echo "=== $END_NETIF ===" >> $LOG_DIR/"iftop_$NOW.log"
+
+    sudo /usr/bin/pkill iftop
+    sleep 0.1
+
+    make_result
+
+cat << EOF > $LOG_DIR/result.log
+*************************************
+*               Result              *
+*************************************
+ - Edge Count      : $LOGFILE_COUNT
+ - Packet Bundle   : $PACKET_BUNDLE
+ - Test Time       : $RUN_TIME (sec)
+ - Average latency : $PACKET_LATENCY
+ - Average bps     : $PACKET_BPS
+ - Average pps     : $PACKET_PPS
+ - Packet loss     : ($PACKET_LOSS/$PACKET_COUNT)
+ - Packet disorder : ($PACKET_DISORDER/$PACKET_COUNT)
+EOF
+    cat $LOG_DIR/result.log
+
+    /bin/tar cvzf $NOW.tar.gz edge_log > /dev/null
+
+    echo "Archiving log file " $NOW.tar.gz
+    exit
+}
+
+function make_result() {
+    sed -i '/DISORDER/!d' $LOG_DIR/*.dump
+
+    #cat 10001.dump | awk '{print $7}' | cut -f2 -d"="
+}
+
+EDGE_COUNT=$1
+PACKET_BUNDLE=$2
+START=`date +%s.%2N`
+LOG_DIR=$(pwd)/edge_log
+OME_BIN="./OvenMediaEngine"
+
+START_NETIF=$(date +"%Y/%m/%d %H:%M:%S")
+NOW=$(date +"%Y%m%d%H%M%S")
+
+mkdir -p $LOG_DIR
+rm -rf $LOG_DIR/*
+:
+[ "x$EDGE_COUNT" == "x" ] && echo "Please set the number of edge server" && exit
+[ "x$PACKET_BUNDLE" == "x" ] && echo "Please set the number of packet for logging " && exit
+
+for ((i=1;i<=$EDGE_COUNT;i++));
+do
+	SIGNAL_PORT=$((3333 + $i))
+	CANDIDATE_PORT=$((10000 + $i))
+	LOG=$LOG_DIR/$CANDIDATE_PORT.dump
+
+	LD_LIBRARY_PATH=$(pwd)/dep $OME_BIN $SIGNAL_PORT $CANDIDATE_PORT $PACKET_BUNDLE > /dev/null 2> $LOG &
+	sleep 0.1
+done
+
+echo "=== $START_NETIF ===" > $LOG_DIR/"iftop_$NOW.log"
+nohup sudo iftop -t -P -f "udp src port 9000" >> $LOG_DIR/"iftop_$NOW.log" &
+
+watch 'echo -n "Running OME count = " && ps -ef | grep OvenMediaEngine | sed -e /grep/d | wc -l &&
+echo "......" &&
+netstat -pl | grep Oven | head -5 &&
+echo "......" &&
+ps -ef | grep ./Oven | head -5 | sed -e /grep/d &&
+echo "......"'
+
+#while :
+#do
+#    clear
+#    echo Running OvenMediaEngine count = $(ps -ef | grep OvenMediaEngine | sed -e /grep/d | wc -l)
+#    netstat -pl | grep Oven | head -5 && ps -ef | grep Oven | head -5 | sed -e /grep/d
+#    echo ...
+#        echo Total Memory = $(cat /proc/meminfo | grep MemTotal | awk '{print $2 " " $3}')
+#        echo Free Memory = $(cat /proc/meminfo | grep MemFree | awk '{print $2 " " $3}')
+#    sleep 1
+#done

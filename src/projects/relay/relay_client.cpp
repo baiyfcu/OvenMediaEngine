@@ -203,6 +203,8 @@ void RelayClient::HandleData(const RelayPacket &packet)
 		return;
 	}
 
+	//fprintf(stderr, "_payload_data=%ld\n", packet._payload_data);
+
 	auto &data = transaction->data;
 	bool is_different_packet = false;
 

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Server version="1">
+	<Name>OvenMediaEngine</Name>
+	<Hosts>
+		<Host>
+			<Name>default</Name>
+			<!-- TODO: NEED TO CHANGE THIS IP ADDRESS -->
+			<IP>@LOCAL_IP</IP>
+			<Applications>
+				<Application>
+					<Name>app</Name>
+					<Type>live</Type>
+					<Encodes>
+						<Encode>
+							<Name>FHD_VP8</Name>
+							<Audio>
+								<Codec>opus</Codec>
+								<Bitrate>128000</Bitrate>
+								<Samplerate>48000</Samplerate>
+								<Channel>2</Channel>
+							</Audio>
+							<Video>
+								<!-- vp8, h264 -->
+								<Codec>vp8</Codec>
+								<Width>1280</Width>
+								<Height>720</Height>
+								<Bitrate>2000000</Bitrate>
+								<Framerate>30.0</Framerate>
+							</Video>
+						</Encode>
+						<Encode>
+							<Name>FHD_H264</Name>
+							<Video>
+								<Codec>h264</Codec>
+								<Width>1280</Width>
+								<Height>720</Height>
+								<Bitrate>2000000</Bitrate>
+								<Framerate>30.0</Framerate>
+							</Video>
+						</Encode>
+					</Encodes>
+					<Streams>
+						<Stream>
+							<Name>${OriginStreamName}_o</Name>
+							<Profiles>
+								<Profile>FHD_VP8</Profile>
+								<Profile>FHD_H264</Profile>
+							</Profiles>
+						</Stream>
+					</Streams>
+					<Providers>
+						<RTMP>
+							<MaxConnection>10</MaxConnection>
+							<Port>1935</Port>
+						</RTMP>
+					</Providers>
+					<Publishers>
+						<RTMP />
+						<!--<HLS>-->
+							<!--<TLS include="/root/dev/OvenMediaEngine/src/conf/TLS.xml" />-->
+						<!--</HLS>-->
+						<!--<Dash>-->
+							<!--<TLS include="/root/dev/OvenMediaEngine/src/conf/TLS.xml" />-->
+						<!--</Dash>-->
+						<WebRTC>
+							<!-- TODO: NEED TO CHANGE THIS IP ADDRESS -->
+							<IP>@LOCAL_IP</IP>
+							<MaxConnection>10</MaxConnection>
+							<Port>10000/udp</Port>
+							<Timeout>30000</Timeout>
+							<Signalling>
+								<TLS include="/root/dev/OvenMediaEngine/src/conf/TLS.xml" />
+								<Port>3333</Port>
+							</Signalling>
+						</WebRTC>
+					</Publishers>
+				</Application>
+			</Applications>
+		</Host>
+	</Hosts>
+</Server>

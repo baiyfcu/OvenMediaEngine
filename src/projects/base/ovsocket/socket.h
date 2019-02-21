@@ -297,5 +297,6 @@ namespace ov
 		uint32_t _packet_loss_count = 0;
 		uint64_t _packet_start_time = 0;
 		ssize_t _packet_read_bytes = 0;
+		uint64_t _packet_latency_sum = 0;
 	};
 }

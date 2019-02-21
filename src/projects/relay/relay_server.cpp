@@ -262,6 +262,9 @@ void RelayServer::Send(info::stream_id_t stream_id, const RelayPacket &base_pack
 
 			for(auto &client : client_list_iter->second)
 			{
+				packet.srctime = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(
+									std::chrono::high_resolution_clock::now().time_since_epoch()).count());
+
 				client->Send(&packet, sizeof(packet));
 			}
 
@@ -274,6 +277,9 @@ void RelayServer::Send(info::stream_id_t stream_id, const RelayPacket &base_pack
 
 		for(auto &client : client_list_iter->second)
 		{
+			packet.srctime = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(
+				std::chrono::high_resolution_clock::now().time_since_epoch()).count());
+
 			client->Send(&packet, sizeof(packet));
 		}
 	}
@@ -317,6 +323,9 @@ void RelayServer::Send(ov::Socket *socket, info::stream_id_t stream_id, const Re
 				packet.SetEnd(true);
 			}
 
+			packet.srctime = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(
+				std::chrono::high_resolution_clock::now().time_since_epoch()).count());
+
 			socket->Send(&packet, sizeof(packet));
 
 			packet.SetStart(false);
@@ -325,6 +334,9 @@ void RelayServer::Send(ov::Socket *socket, info::stream_id_t stream_id, const Re
 	else
 	{
 		packet.SetEnd(true);
+
+		packet.srctime = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(
+			std::chrono::high_resolution_clock::now().time_since_epoch()).count());
 
 		socket->Send(&packet, sizeof(packet));
 	}

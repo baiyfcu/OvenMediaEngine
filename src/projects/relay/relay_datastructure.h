@@ -169,6 +169,8 @@ struct RelayPacket
 		return (_end_indicator == 1);
 	}
 
+	uint64_t srctime = 0;
+
 protected:
 	// All variables are saved as big endian
 

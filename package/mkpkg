@@ -13,3 +13,9 @@ cp -rf $OME_BINS $PKG_DIR
 
 (cd tmp && tar cvzf ../$OME_TGZ $OME)
 rm -rf tmp
+
+./local_test
+
+(cd test_origin/OvenMediaEngine;./install origin_server)
+
+(cd test_edge/OvenMediaEngine;./install edge_server "192.168.0.225")

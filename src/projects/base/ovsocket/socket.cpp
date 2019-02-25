@@ -1110,12 +1110,12 @@ namespace ov
 				}
 				else
 				{
-					fprintf(stderr, "#%08d SEQ=%d LOSS=%d DISORDER=%d LATENCY=%0.3f (S=%ld,C=%ld) Kbps=%0.0f pps=%0.0f\n",
+					fprintf(stderr, "#%08d SEQ=%d LOSS=%d DISORDER=%d LATENCY=%ld (S=%ld,C=%ld) Kbps=%0.0f pps=%0.0f\n",
 					        msg_ctrl.msgno,
 					        msg_ctrl.pktseq,
 					        _packet_loss_count,
 					        _packet_disorder_count,
-					        (float)(_packet_latency_sum / 1000) / (float)cfg::ConfigManager::edge_logging_size,
+					        (_packet_latency_sum) / cfg::ConfigManager::edge_logging_size,
 					        packet.srctime,
 					        cur_time,
 					        ((float)_packet_read_bytes / packet_duration) * 0.008, // bps

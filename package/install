@@ -33,6 +33,10 @@ elif [ "x$ROLE" == "xedge_server" ]; then
     fi
 
     PUBLISHER_IP=$(curl ifconfig.me 2>/dev/null)
+	
+	if [ "x$LOCAL_IP" == "x192.168.0.225" ]; then
+		PUBLISHER_IP=$LOCAL_IP
+	fi
 
     cp -f conf/_Edge.xml conf/Server.xml
 
@@ -43,6 +47,7 @@ elif [ "x$ROLE" == "xedge_server" ]; then
     echo "=== Edge Server ==="
     echo "IP="$LOCAL_IP
     echo "ORIGIN IP="$ORIGIN_IP
+
     echo "PUBLISHER IP="$PUBLISHER_IP
 else
     echo "select role [origin|edge]"
@@ -74,6 +79,4 @@ if [ "x$ATOP" == "x" ]; then
 fi
 
 echo "Please wait for the ntpdate to complete"
-ntpdate -d time.bora.net >/dev/null
-
-
+sudo ntpdate -buv kr.pool.ntp.org

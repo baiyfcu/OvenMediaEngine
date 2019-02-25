@@ -9,16 +9,20 @@
 #pragma once
 
 #include <cstdint>
+
+#include <base/common_types.h>
 #include <base/ovlibrary/ovlibrary.h>
 
 enum class RelayPacketType : uint8_t
 {
-	RequestSync,
-	Sync,
+	Register,
+	CreateStream,
+	DeleteStream,
 	Packet,
+	Error
 };
 
-constexpr const int RelayPacketDataSize = 1250;
+constexpr const int RelayPacketDataSize = 1200;
 
 #pragma pack(push, 1)
 struct RelayPacket
@@ -121,6 +125,16 @@ struct RelayPacket
 		return _flags;
 	}
 
+	void SetFragmentHeader(const FragmentationHeader *header)
+	{
+		::memcpy(&_frag_header, header, sizeof(_frag_header));
+	}
+
+	const FragmentationHeader *GetFragmentHeader() const
+	{
+		return &_frag_header;
+	}
+
 	void SetData(const void *data, uint16_t length)
 	{
 		if(length <= RelayPacketDataSize)
@@ -172,7 +186,8 @@ struct RelayPacket
 	uint64_t srctime = 0;
 
 protected:
-	// All variables are saved as big endian
+	// TODO(dimiden): The endian between the RelayServer and the RelayClient must match
+	// (Currently, it uses little endian)
 
 	// arbitrary number to distinguish different packets
 	uint32_t _transaction_id = 0;
@@ -194,6 +209,8 @@ protected:
 	uint64_t _pts = 0;
 	// MediaPacketFlag
 	uint8_t _flags = 0;
+
+	FragmentationHeader _frag_header;
 
 	uint16_t _data_size = 0;
 	uint8_t _data[RelayPacketDataSize] = {};

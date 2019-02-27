@@ -10,13 +10,15 @@
 
 #include "http_datastructure.h"
 
+class HttpRequest;
+
 class HttpResponse : public ov::EnableSharedFromThis<HttpResponse>
 {
 public:
 	friend class HttpClient;
 
-	HttpResponse(ov::ClientSocket *remote);
-	~HttpResponse() = default;
+	HttpResponse(HttpRequest *request, ov::ClientSocket *remote);
+	~HttpResponse() override = default;
 
 	HttpStatusCode GetStatusCode() const
 	{
@@ -89,6 +91,7 @@ protected:
 	bool SendHeaderIfNeeded();
 	bool SendResponse();
 
+	HttpRequest *_request = nullptr;
 	ov::ClientSocket *_remote = nullptr;
 
 	std::shared_ptr<ov::Tls> _tls = nullptr;

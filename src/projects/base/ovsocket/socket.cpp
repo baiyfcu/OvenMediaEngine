@@ -1096,18 +1096,24 @@ namespace ov
 			if(msg_ctrl.msgno != (_msg_ctrl_old.msgno + 1))
 			{
 				fprintf(stderr,
-				        "msg_ctrl.msgno=%d, _msg_ctrl_old.msgno=%d\n",
+				        "loss     msg_ctrl.msgno=%d, _msg_ctrl_old.msgno=%d, msg_ctrl.pktseq=%d, _msg_ctrl_old.pktseq=%d\n",
 				        msg_ctrl.msgno,
-				        _msg_ctrl_old.msgno );
+				        _msg_ctrl_old.msgno,
+				        msg_ctrl.pktseq,
+				        _msg_ctrl_old.pktseq
+				        );
 				_packet_loss_count++;
 			}
 
-			if(msg_ctrl.msgno <= _msg_ctrl_old.msgno || msg_ctrl.pktseq <= _msg_ctrl_old.pktseq)
+			if(msg_ctrl.msgno < _msg_ctrl_old.msgno)
 			{
 				fprintf(stderr,
-				        "msg_ctrl.msgno=%d, _msg_ctrl_old.msgno=%d\n",
+				        "disorder msg_ctrl.msgno=%d, _msg_ctrl_old.msgno=%d, msg_ctrl.pktseq=%d, _msg_ctrl_old.pktseq=%d\n",
 				        msg_ctrl.msgno,
-				        _msg_ctrl_old.msgno);
+				        _msg_ctrl_old.msgno,
+				        msg_ctrl.pktseq,
+				        _msg_ctrl_old.pktseq
+				);
 				_packet_disorder_count++;
 			}
 

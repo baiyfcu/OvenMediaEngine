@@ -11,6 +11,8 @@
 				<Application>
 					<Name>app</Name>
 					<Type>liveedge</Type>
+					<Relay />
+					<RelayPort>0</RelayPort>
 					<Origin>
 						<Primary>@ORIGIN_IP:9000</Primary>
 						<Secondary>@ORIGIN_IP:9000</Secondary>
@@ -20,7 +22,6 @@
 							<IP>@PUBLISHER_IP</IP>
 							<Port>0/udp</Port>
 							<Signalling>
-								<TLS include="/root/dev/OvenMediaEngine/src/conf/TLS.xml" />
 								<Port>0</Port>
 							</Signalling>
 						</WebRTC>

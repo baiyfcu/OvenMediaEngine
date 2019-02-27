@@ -4,7 +4,7 @@ OME=OvenMediaEngine
 BIN_DIR="../src/bin/DEBUG"
 PKG_DIR="tmp/$OME"
 OME_TGZ="$OME.tar.gz"
-OME_BINS="$BIN_DIR/$OME conf dep edge_server origin_server install"
+OME_BINS="$BIN_DIR/$OME conf dep edge_server origin_server check_system install"
 
 [ "x$1" == "xclean" ] && rm -rf $OME $OME_TGZ test_origin test_edge && exit
 

@@ -1,52 +1,101 @@
 #!/bin/bash
 
 trap ctrl_c INT
+trap sig_term SIGTERM
 
-function ctrl_c() {
+function quit_process() {
     #pgrep OvenMediaEngine | xargs sudo kill -9
     /usr/bin/pkill OvenMediaEngine
     sleep 1
 
-    RESULT=$(ps -ef | grep OvenMediaEngine | sed -e /grep/d | wc -l)
-    [ $RESULT != 0 ] && echo "Please kill OvenMediaEngine manually"
+    RESULT=$(pgrep OvenMediaEngine | wc -l)
+    [[ ${RESULT} != 0 ]] && echo "Please kill OvenMediaEngine manually"
 
     END=`date +%s.%2N`
     RUN_TIME=$(echo "$END - $START" | bc)
-    LOGFILE_COUNT=$(ls $LOG_DIR | wc -l)
+    LOGFILE_COUNT=$(ls ${LOG_DIR} | wc -l)
 
-    END_NETIF=$(date +"%Y/%m/%d %H:%M:%S")
-    echo "=== $END_NETIF ===" >> $LOG_DIR/"iftop_$NOW.log"
+    #END_NETIF=$(date +"%Y/%m/%d %H:%M:%S")
+    #echo "=== $END_NETIF ===" >> $LOG_DIR/"iftop_$NOW.log"
 
-    sudo /usr/bin/pkill iftop
-    sleep 0.1
+    #sudo /usr/bin/pkill iftop
+    #sleep 0.1
 
     make_result
 
-cat << EOF > $LOG_DIR/result.log
-*************************************
-*               Result              *
-*************************************
- - Edge Count      : $LOGFILE_COUNT
- - Packet Bundle   : $PACKET_BUNDLE
- - Test Time       : $RUN_TIME (sec)
- - Average latency : $PACKET_LATENCY
- - Average bps     : $PACKET_BPS
- - Average pps     : $PACKET_PPS
- - Packet loss     : ($PACKET_LOSS/$PACKET_COUNT)
- - Packet disorder : ($PACKET_DISORDER/$PACKET_COUNT)
+    SUM_LATENCY=$(cat ${LOG_DIR}/result.log | awk '{print $2}' | cut -f2 -d"=" | awk '{total = total + $1}END{print total}')
+    SUM_BPS=$(cat ${LOG_DIR}/result.log | awk '{print $3}' | cut -f2 -d"=" | awk '{total = total + $1}END{print total}')
+    SUM_PPS=$(cat ${LOG_DIR}/result.log | awk '{print $4}' | cut -f2 -d"=" | awk '{total = total + $1}END{print total}')
+    SUM_LOSS=$(cat ${LOG_DIR}/result.log | awk '{print $5}' | cut -f2 -d"=" | awk '{total = total + $1}END{print total}')
+    SUM_DISORDER=$(cat ${LOG_DIR}/result.log | awk '{print $6}' | cut -f2 -d"=" | awk '{total = total + $1}END{print total}')
+
+    SUM_LINE=$(cat ${LOG_DIR}/result.log | wc -l)
+
+    AVG_LATENCY=$(($SUM_LATENCY / $SUM_LINE))
+    AVG_BPS=$(($SUM_BPS / $SUM_LINE))
+    AVG_PPS=$(($SUM_PPS / $SUM_LINE))
+
+cat << EOF >> $LOG_DIR/result.log
+
+[ Enviroment ]
+- edge count = ${LOGFILE_COUNT}
+- packet bundle = ${PACKET_BUNDLE}
+- test time = ${RUN_TIME} (sec)
+
+[ Average ]
+- latency = ${AVG_LATENCY} (usec)
+- bps = ${AVG_BPS} (Kbps)
+- pps = ${AVG_PPS}
+- loss = ${SUM_LOSS} / ${TOTAL_PACKET}
+- disorder = ${SUM_DISORDER} / ${TOTAL_PACKET}
+
 EOF
-    cat $LOG_DIR/result.log
+    cat ${LOG_DIR}/result.log
 
-    /bin/tar cvzf $NOW.tar.gz edge_log > /dev/null
+    /bin/tar cvzf ${NOW}.tar.gz edge_log > /dev/null
 
-    echo "Archiving log file " $NOW.tar.gz
-    exit
+    echo "Archiving log file " ${NOW}.tar.gz
+}
+
+function sig_term() {
+    quit_process
+}
+
+function ctrl_c() {
+    quit_process
 }
 
 function make_result() {
-    sed -i '/DISORDER/!d' $LOG_DIR/*.dump
+    rm -rf ${LOG_DIR}.raw
+    cp -rf ${LOG_DIR} ${LOG_DIR}.raw
+    sed -i '/DISORDER/!d' ${LOG_DIR}/*.dump
 
-    #cat 10001.dump | awk '{print $7}' | cut -f2 -d"="
+    SUM_LINE_ALL=0
+    for DUMP_FILE in ${LOG_DIR}/*.dump; do
+        # $AVG_LATENCY
+
+        SUM_LOSS=$(cat ${DUMP_FILE} | awk '{print $3}' | cut -f2 -d"=" | awk '{total = total + $1}END{print total}')
+        SUM_DISORDER=$(cat ${DUMP_FILE} | awk '{print $4}' | cut -f2 -d"=" | awk '{total = total + $1}END{print total}')
+        SUM_LATENCY=$(cat ${DUMP_FILE} | awk '{print $5}' | cut -f2 -d"=" | awk '{total = total + $1}END{print total}')
+        SUM_BPS=$(cat ${DUMP_FILE} | awk '{print $7}' | cut -f2 -d"=" | awk '{total = total + $1}END{print total}')
+        SUM_PPS=$(cat ${DUMP_FILE} | awk '{print $8}' | cut -f2 -d"=" | awk '{total = total + $1}END{print total}')
+
+        SUM_LINE=$(cat ${DUMP_FILE} | wc -l)
+        EDGE_NAME=$(basename ${DUMP_FILE} | cut -d"." -f1)
+
+        if [[ ${SUM_LINE} != 0 ]]; then
+            AVG_LATENCY=$(($SUM_LATENCY / $SUM_LINE))
+            AVG_BPS=$(($SUM_BPS / $SUM_LINE))
+            AVG_PPS=$(($SUM_PPS / $SUM_LINE))
+
+            echo "#$EDGE_NAME latency=$AVG_LATENCY bps=$AVG_BPS pps=$AVG_PPS loss=$SUM_LOSS disorder=$SUM_DISORDER" >> ${LOG_DIR}/result.log
+        else
+            echo "#$EDGE_NAME latency=0 bps=0 pps=0 loss=0 disorder=0" >> ${LOG_DIR}/result.log
+        fi
+        SUM_LINE_ALL=$(($SUM_LINE_ALL+$SUM_LINE))
+    done
+
+    TOTAL_PACKET=$(($PACKET_BUNDLE * $SUM_LINE_ALL))
 }
 
 EDGE_COUNT=$1
@@ -54,30 +103,31 @@ PACKET_BUNDLE=$2
 START=`date +%s.%2N`
 LOG_DIR=$(pwd)/edge_log
 OME_BIN="./OvenMediaEngine"
+TOTAL_PACKET=0
 
 START_NETIF=$(date +"%Y/%m/%d %H:%M:%S")
 NOW=$(date +"%Y%m%d%H%M%S")
 
-mkdir -p $LOG_DIR
-rm -rf $LOG_DIR/*
+mkdir -p ${LOG_DIR}
+rm -rf ${LOG_DIR}/*
 :
-[ "x$EDGE_COUNT" == "x" ] && echo "Please set the number of edge server" && exit
-[ "x$PACKET_BUNDLE" == "x" ] && echo "Please set the number of packet for logging " && exit
+[[ "x$EDGE_COUNT" == "x" ]] && echo "Please set the number of edge server" && exit
+[[ "x$PACKET_BUNDLE" == "x" ]] && echo "Please set the number of packet for logging " && exit
 
 for ((i=1;i<=$EDGE_COUNT;i++));
 do
 	SIGNAL_PORT=$((3333 + $i))
 	CANDIDATE_PORT=$((10000 + $i))
-	LOG=$LOG_DIR/$CANDIDATE_PORT.dump
+	LOG=${LOG_DIR}/${CANDIDATE_PORT}.dump
 
-	LD_LIBRARY_PATH=$(pwd)/dep $OME_BIN $SIGNAL_PORT $CANDIDATE_PORT $PACKET_BUNDLE > /dev/null 2> $LOG &
+	LD_LIBRARY_PATH=$(pwd)/dep ${OME_BIN} ${SIGNAL_PORT} ${CANDIDATE_PORT} ${PACKET_BUNDLE} > /dev/null 2> ${LOG} &
 	sleep 0.1
 done
 
-echo "=== $START_NETIF ===" > $LOG_DIR/"iftop_$NOW.log"
-nohup sudo iftop -t -P -f "udp src port 9000" >> $LOG_DIR/"iftop_$NOW.log" &
+#echo "=== $START_NETIF ===" > $LOG_DIR/"iftop_$NOW.log"
+#nohup sudo iftop -t -P -f "udp src port 9000" >> $LOG_DIR/"iftop_$NOW.log" &
 
-watch 'echo -n "Running OME count = " && ps -ef | grep OvenMediaEngine | sed -e /grep/d | wc -l &&
+watch 'echo -n "Running OME count = " && pgrep OvenMediaEngine | wc -l &&
 echo "......" &&
 netstat -pl | grep Oven | head -5 &&
 echo "......" &&

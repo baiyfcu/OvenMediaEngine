@@ -11,6 +11,9 @@
 				<Application>
 					<Name>app</Name>
 					<Type>live</Type>
+					<!-- under construction -->
+					<Relay />
+					<RelayPort>9000</RelayPort>
 					<Encodes>
 						<Encode>
 							<Name>FHD_VP8</Name>
@@ -53,6 +56,8 @@
 						<RTMP>
 							<MaxConnection>10</MaxConnection>
 							<Port>1935</Port>
+							<!--<OverlapStreamProcess>refresh</OverlapStreamSession>-->
+							<OverlapStreamProcess>reject</OverlapStreamProcess>
 						</RTMP>
 					</Providers>
 					<Publishers>
@@ -65,12 +70,11 @@
 						<!--</Dash>-->
 						<WebRTC>
 							<!-- TODO: NEED TO CHANGE THIS IP ADDRESS -->
-							<IP>@LOCAL_IP</IP>
+							<IP>@PUBLISHER_IP</IP>
 							<MaxConnection>10</MaxConnection>
 							<Port>10000/udp</Port>
 							<Timeout>30000</Timeout>
 							<Signalling>
-								<TLS include="/root/dev/OvenMediaEngine/src/conf/TLS.xml" />
 								<Port>3333</Port>
 							</Signalling>
 						</WebRTC>

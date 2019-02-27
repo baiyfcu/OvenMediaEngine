@@ -8,23 +8,23 @@ function ctrl_c() {
     sleep 0.1
 
     END=$(date +"%Y/%m/%d %H:%M:%S")
-    echo "=== $END ===" >> $LOG_DIR/"iftop_$NOW.log"
+    echo "=== $END ===" >> ${LOG_DIR}/"iftop_${NOW}.log"
 
     sudo /usr/bin/pkill iftop
     sleep 0.1
 
-    cat $LOG_DIR/"iftop_$NOW.log" | grep "=>\|<=" | xargs -n2 -d'\n' | awk '{print $1 " " $2 " " $8 " " $4 }' > $LOG_DIR/"iftop_$NOW.dump"
+    cat ${LOG_DIR}/"iftop_${NOW}.log" | grep "=>\|<=" | xargs -n2 -d'\n' | awk '{print $1 " " $2 " " $8 " " $4 }' > ${LOG_DIR}/"iftop_$NOW.dump"
 }
 
 LOG_DIR=$(pwd)/origin_log
 OME_BIN="./OvenMediaEngine"
 
-mkdir -p $LOG_DIR
+mkdir -p ${LOG_DIR}
 
 NOW=$(date +"%Y%m%d%H%M%S")
-START=$(date +"%Y/%m/%d %H:%M:%S")
-echo "=== $START ===" > $LOG_DIR/"iftop_$NOW.log"
-nohup sudo iftop -n -t -P -f "udp src port 9000" >> $LOG_DIR/"iftop_$NOW.log" &
+#START=$(date +"%Y/%m/%d %H:%M:%S")
+#echo "=== $START ===" > $LOG_DIR/"iftop_$NOW.log"
+#nohup sudo iftop -n -t -P -f "udp src port 9000" >> $LOG_DIR/"iftop_$NOW.log" &
 
-LD_LIBRARY_PATH=$(pwd)/dep $OME_BIN
+LD_LIBRARY_PATH=$(pwd)/dep ${OME_BIN}
 

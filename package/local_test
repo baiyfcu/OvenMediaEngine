@@ -8,8 +8,8 @@ rm -rf test_edge
 mkdir -p test_origin
 mkdir -p test_edge
 
-cp -rf $OME test_origin
-cp -rf $OME test_edge
+cp -rf ${OME} test_origin
+cp -rf ${OME} test_edge
 
-(cd test_origin; tar xvf $OME)
-(cd test_edge; tar xvf $OME)
+(cd test_origin; tar xvf ${OME})
+(cd test_edge; tar xvf ${OME})

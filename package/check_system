@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo $(hostname) > system.log
+sysctl net.ipv4.tcp_window_scaling >> system.log
+sysctl -a 2>/dev/null | grep net | grep "rmem\|wmem" | sed -e /sctp/d >> system.log
+sysctl net.core.netdev_max_backlog >> system.log
+sysctl net.core.somaxconn >> system.log
+sysctl net.ipv4.tcp_max_syn_backlog >> system.log
+sysctl net.ipv4.ip_local_port_range >> system.log
+sysctl net.ipv4.tcp_max_tw_buckets >> system.log
+sysctl fs.file-max >> system.log

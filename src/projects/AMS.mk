@@ -11,7 +11,7 @@ PROJECT_CXX_INCLUDES := \
 PROJECT_CFLAGS := \
 	-D__STDC_CONSTANT_MACROS \
 	-Wfatal-errors \
-	-Wno-unused-function
+	-Wno-unused-function -O3
 
 PROJECT_CXXFLAGS := \
 	$(PROJECT_CFLAGS) \

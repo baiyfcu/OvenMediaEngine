@@ -811,8 +811,6 @@ namespace ov
 
 				while(remained > 0L)
 				{
-					SRT_MSGCTRL msg_ctrl;
-					::memset(&msg_ctrl, 0, sizeof(SRT_MSGCTRL));
 					// SRT limits packet size up to 1316
 					int to_send = std::min(1316, static_cast<int>(remained));
 
@@ -905,8 +903,7 @@ namespace ov
 
 		ssize_t read_bytes = -1;
 
-		SRT_MSGCTRL msg_ctrl;
-		::memset(&msg_ctrl, 0, sizeof(SRT_MSGCTRL));
+		SRT_MSGCTRL msg_ctrl {};
 
 		switch(GetType())
 		{

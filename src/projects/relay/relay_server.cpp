@@ -227,7 +227,7 @@ void RelayServer::Send(info::stream_id_t stream_id, const RelayPacket &base_pack
 			for(auto &client : _client_list)
 			{
 				packet.srctime = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(
-									std::chrono::high_resolution_clock::now().time_since_epoch()).count());
+					std::chrono::high_resolution_clock::now().time_since_epoch()).count());
 
 				client.first->Send(&packet, sizeof(packet));
 			}

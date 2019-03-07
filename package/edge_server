@@ -52,7 +52,7 @@ cat << EOF >> $LOG_DIR/result.log
 EOF
     cat ${LOG_DIR}/result.log
 
-    /bin/tar cvzf ${NOW}.tar.gz edge_log > /dev/null
+    /bin/tar cvzf ${NOW}.tar.gz edge_log* > /dev/null
 
     echo "Archiving log file " ${NOW}.tar.gz
 }

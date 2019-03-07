@@ -454,6 +454,13 @@ void MediaRouteApplication::MainTask()
 			logte("stream is nullptr - strem_id(%u)", indicator->_stream_id);
 			continue;
 		}
+		//
+		if (stream->Size() > 4)
+		{
+			logte("stream->Size()=%d", stream->Size());
+			stream->Pop();
+			continue;
+		}
 
 		auto cur_buf = stream->Pop();
 

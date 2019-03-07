@@ -71,6 +71,8 @@ int GetBitrate(ov::String bitrate)
 		multiplier = 1024 * 1024;
 	}
 
+	static_cast<int>(ov::Converter::ToFloat(bitrate) * multiplier);
+
 	return static_cast<int>(ov::Converter::ToFloat(bitrate) * multiplier);
 }
 
@@ -121,7 +123,8 @@ TranscodeStream::TranscodeStream(const info::Application &application_info, std:
 				GetCodecId(video_profile->GetCodec()),
 				GetBitrate(video_profile->GetBitrate()),
 				video_profile->GetWidth(), video_profile->GetHeight(),
-				video_profile->GetFramerate()
+				//video_profile->GetFramerate()
+				30
 			);
 			uint8_t track_id = AddContext(common::MediaType::Video, context);
 			if(track_id)

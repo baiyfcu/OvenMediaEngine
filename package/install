@@ -37,20 +37,20 @@ if [[ "x$ROLE" == "xorigin_server" ]]; then
 elif [[ "x$ROLE" == "xedge_server" ]]; then
 
     if [[ "x$ORIGIN_IP" == "x" ]]; then
-        echo "origin ip address required"
-        exit
+        ORIGIN_IP="172.31.22.26"
     fi
 
     cp -f conf/_Edge.xml conf/Server.xml
 
     sed -i -e "s/@ORIGIN_IP/$ORIGIN_IP/g" "conf/Server.xml"
     sed -i -e "s/@LOCAL_IP/$LOCAL_IP/g" "conf/Server.xml"
-    sed -i -e "s/@PUBLISHER_IP/$PUBLISHER_IP/g" "conf/Server.xml"
+    sed -i -e "s/@PUBLISHER_IP/$LOCAL_IP/g" "conf/Server.xml"
 
     echo "=== Edge Server ==="
     echo "IP="${LOCAL_IP}
     echo "ORIGIN IP="${ORIGIN_IP}
-    echo "PUBLISHER IP="${PUBLISHER_IP}
+    echo "PUBLISHER IP="${LOCAL_IP}
+
 else
     echo "select role [origin|edge]"
     exit

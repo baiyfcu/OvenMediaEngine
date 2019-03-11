@@ -211,7 +211,10 @@ std::shared_ptr<RtcSession> RtcStream::FindRtcSessionByPeerSDPSessionID(uint32_t
 
 bool RtcStream::SendRtpToNetwork(std::unique_ptr<RtpPacket> packet)
 {
-	logte("RTP Packetizing completed : length(%d), payload_type(%d)", packet->GetData()->GetLength(), packet->PayloadType());
+	//logte("RTP Packetizing completed : length(%d), payload_type(%d)", packet->GetData()->GetLength(), packet->PayloadType());
+
+	//uint64_t t1 = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(
+	//	std::chrono::high_resolution_clock::now().time_since_epoch()).count());
 
 	// 모든 Session에 만들어진 Packet을 전달한다.
 	for(auto const &x : GetSessionMap())
@@ -220,9 +223,15 @@ bool RtcStream::SendRtpToNetwork(std::unique_ptr<RtpPacket> packet)
 
 		// Session에 전달되면 SRTP로 인해 모두 변경되기 때문에 복제하여 보내야 한다.
 		auto session_packet = std::make_unique<RtpPacket>(*packet);
-		logte("Copy packet : packet length (%d)", packet->GetData()->GetLength());
+		//logte("Copy packet : packet length (%d)", packet->GetData()->GetLength());
 		std::static_pointer_cast<RtcSession>(session)->SendOutgoingData(std::move(session_packet));
 	}
+
+	//uint64_t t2 = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(
+	//	std::chrono::high_resolution_clock::now().time_since_epoch()).count());
+
+	//auto item = GetSessionMap();
+	//fprintf(stderr, "sendtime=%ld, session=%d\n", t2-t1, item.size());
 
 	return true;
 }

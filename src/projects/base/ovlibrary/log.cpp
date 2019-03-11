@@ -30,8 +30,6 @@ void ov_log_set_enable(const char *tag_regex, OVLogLevel level, bool is_enabled)
 
 void ov_log_internal(OVLogLevel level, const char *tag, const char *file, int line, const char *method, const char *format, ...)
 {
-	return;
-
 	va_list arg_list;
 	va_start(arg_list, format);
 

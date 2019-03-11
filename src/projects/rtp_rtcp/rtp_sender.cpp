@@ -115,17 +115,17 @@ bool RTPSender::SendVideo(RtpVideoCodecType video_type,
 		bool last = (i + 1) == num_packets;
 		auto packet = last ? std::move(last_rtp_header) : std::make_unique<RtpPacket>(*rtp_header_template);
 
-		if(!packetizer->NextPacket(packet.get()))
-		{
-			return false;
-		}
+        if(!packetizer->NextPacket(packet.get()))
+        {
+            return false;
+        }
 
 		if(!AssignSequenceNumber(packet.get()))
 		{
 			return false;
 		}
 
-		// RtcSession을 통해 전송한다.
+	    // RtcSession을 통해 전송한다.
 		_session->SendRtpToNetwork(std::move(packet));
 	}
 

@@ -43,8 +43,6 @@ bool RtpRtcp::SendOutgoingData(FrameType frame_type,
                                const FragmentationHeader *fragmentation,
                                const RTPVideoHeader *rtp_video_header)
 {
-
-
 	//TODO: RTCP SENDER REPORT를 전송해야 한다.
 //	logd("RTP_RTCP", "RtpRtcp::SendOutgoingData Enter");
 

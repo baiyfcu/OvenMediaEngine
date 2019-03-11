@@ -181,6 +181,7 @@ bool RtcSession::SendOutgoingData(std::shared_ptr<MediaTrack> track,
                                   const FragmentationHeader *fragmentation,
                                   const RTPVideoHeader *rtp_video_header)
 {
+
 	// Track ID로 rtp_rtcp를 찾는다.
 	auto it = _rtp_rtcp_map.find(track->GetId());
 	// 없으면 peer가 원하는 track이 아니므로 돌려보냄

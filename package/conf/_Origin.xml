@@ -48,7 +48,7 @@
 							<Name>${OriginStreamName}_o</Name>
 							<Profiles>
 								<Profile>FHD_VP8</Profile>
-								<Profile>FHD_H264</Profile>
+								<!--<Profile>FHD_H264</Profile>-->
 							</Profiles>
 						</Stream>
 					</Streams>

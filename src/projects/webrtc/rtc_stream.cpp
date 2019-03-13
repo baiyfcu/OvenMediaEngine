@@ -197,12 +197,6 @@ bool RtcStream::OnRtpPacketized(std::unique_ptr<RtpPacket> packet)
 {
 	BroadcastPacket(packet->PayloadType(), packet->GetData());
 
-	//uint64_t t2 = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(
-	//	std::chrono::high_resolution_clock::now().time_since_epoch()).count());
-
-	//auto item = GetSessionMap();
-	//fprintf(stderr, "sendtime=%ld, session=%d\n", t2-t1, item.size());
-
 	return true;
 }
 

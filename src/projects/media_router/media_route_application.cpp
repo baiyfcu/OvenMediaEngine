@@ -457,9 +457,9 @@ void MediaRouteApplication::MainTask()
 		//
 		if (stream->Size() > 4)
 		{
-			logte("stream->Size()=%d", stream->Size());
-			stream->Pop();
-			continue;
+			fprintf(stderr, "stream->Size()=%d\n", stream->Size());
+//			stream->Pop();
+//			continue;
 		}
 
 		auto cur_buf = stream->Pop();

@@ -870,7 +870,7 @@ namespace ov
 		{
 			case SocketType::Udp:
 			case SocketType::Tcp:
-				return ::sendto(_socket.GetSocket(), data, length, MSG_NOSIGNAL | (_is_nonblock ? MSG_DONTWAIT : 0), address.Address(), address.AddressLength());
+                return ::sendto(_socket.GetSocket(), data, length, MSG_NOSIGNAL | (_is_nonblock ? MSG_DONTWAIT : 0), address.Address(), address.AddressLength());
 
 			case SocketType::Srt:
 				// Does not support SendTo() for SRT

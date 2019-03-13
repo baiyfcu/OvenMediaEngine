@@ -44,12 +44,12 @@ elif [[ "x$ROLE" == "xedge_server" ]]; then
 
     sed -i -e "s/@ORIGIN_IP/$ORIGIN_IP/g" "conf/Server.xml"
     sed -i -e "s/@LOCAL_IP/$LOCAL_IP/g" "conf/Server.xml"
-    sed -i -e "s/@PUBLISHER_IP/$LOCAL_IP/g" "conf/Server.xml"
+    sed -i -e "s/@PUBLISHER_IP/$PUBLISHER_IP/g" "conf/Server.xml"
 
     echo "=== Edge Server ==="
     echo "IP="${LOCAL_IP}
     echo "ORIGIN IP="${ORIGIN_IP}
-    echo "PUBLISHER IP="${LOCAL_IP}
+    echo "PUBLISHER IP="${PUBLISHER_IP}
 
 else
     echo "select role [origin|edge]"

@@ -226,7 +226,7 @@ bool RtcSignallingServer::Disconnect(const ov::String &application_name, const o
 
 	if(item == client_list.end())
 	{
-		OV_ASSERT2(false);
+		// OV_ASSERT2(false);
 
 		logtw("Cannot find SDP for session id: %d", peer_sdp->GetSessionId());
 

@@ -1,5 +1,7 @@
 #include "publisher_private.h"
 #include "stream.h"
+#include "application.h"
+#include <base/application/application.h>
 
 StreamWorker::StreamWorker()
 {
@@ -113,7 +115,7 @@ void StreamWorker::WorkerThread()
 			continue;
 		}
 
-		session_lock.lock();
+		//session_lock.lock();
 		// 모든 Session에 전송한다.
 		for(auto const &x : _sessions)
 		{
@@ -123,7 +125,7 @@ void StreamWorker::WorkerThread()
 			std::shared_ptr<ov::Data> session_data = packet->_data->Clone();
 			session->SendOutgoingData(packet->_id, session_data);
 		}
-		session_lock.unlock();
+		//session_lock.unlock();
 	}
 }
 

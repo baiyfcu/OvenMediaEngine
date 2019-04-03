@@ -220,8 +220,7 @@ TranscodeStream::TranscodeStream(const info::Application &application_info, std:
 		return;
 	}
 
-	// _max_queue_size : 255
-	_max_queue_size = (_encoders.size() > 0x0F) ? 0xFF : _encoders.size() * 16;
+	_max_queue_size = _encoders.size() * 1024;
 
 	logti("Transcoder Information / Encoders(%d) / Streams(%d)", _encoders.size(), _stream_tracks.size());
 

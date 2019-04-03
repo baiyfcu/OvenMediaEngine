@@ -216,6 +216,11 @@ public:
 		return _is_host;
 	}
 
+	bool IsMobile() const
+	{
+		return _browser.IsMobile();
+	}
+
 	void MakeAsHost()
 	{
 		_is_host = true;

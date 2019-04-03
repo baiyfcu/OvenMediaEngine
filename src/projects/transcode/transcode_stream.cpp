@@ -288,7 +288,7 @@ bool TranscodeStream::Push(std::unique_ptr<MediaPacket> packet)
 
 	if(_queue.size() > _max_queue_size)
 	{
-		logti("Queue(stream) is full, please check your system");
+		logtw("Queue(stream) is full, please check your system");
 		return false;
 	}
 
@@ -401,7 +401,7 @@ TranscodeResult TranscodeStream::do_decode(int32_t track_id, std::unique_ptr<con
 
 				if(_queue_decoded.size() > _max_queue_size)
 				{
-					logti("Queue(decoded) is full, please check your system");
+					logtw("Queue(decode) is full, please check your system");
 					return result;
 				}
 
@@ -449,7 +449,7 @@ TranscodeResult TranscodeStream::do_filter(int32_t track_id, std::unique_ptr<Med
 				{
 					if(++_stats_queue_full_count % 256 == UINT8_MAX)
 					{
-						logti("Queue(filtered) is full, please decrease encoding options(resolution,bitrate,framerate)");
+						logtw("Queue(filter) is full, please decrease encoding options(resolution, bitrate, framerate)");
 					}
 					return result;
 				}

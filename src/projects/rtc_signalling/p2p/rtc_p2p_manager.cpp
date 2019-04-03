@@ -140,6 +140,15 @@ std::shared_ptr<RtcPeerInfo> RtcP2PManager::TryToRegisterAsClientPeer(const std:
 		return nullptr;
 	}
 
+	//====================================================
+	// For testing purpose
+	if(peer->IsMobile() == false)
+	{
+		// Desktop device always become a host peer
+		return nullptr;
+	}
+	//====================================================
+
 	std::lock_guard<std::recursive_mutex> lock_guard(_list_mutex);
 
 	for(const auto &host : _available_list)

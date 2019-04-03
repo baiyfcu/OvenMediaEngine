@@ -20,10 +20,15 @@
 #include <chrono>
 #include <atomic>
 
+// ====================================================
+// For testing purpose
 #define USE_STATS_COUNTER                       1
+// ====================================================
 
 namespace ov
 {
+	// ====================================================
+	// For testing purpose
 #if USE_STATS_COUNTER
 	class StatsCounter
 	{
@@ -75,46 +80,53 @@ namespace ov
 					int64_t loop_count = 0;
 					while(_stop == false)
 					{
-						int64_t count = _count;
-						_count = 0;
+						FILE *stat = fopen("stat", "rb");
 
-						int64_t retry_count = _retry_count;
-						_retry_count = 0;
-
-						int64_t error_count = _error_count;
-						_error_count = 0;
-
-						if((count > 0) || (retry_count) || (error_count > 0))
+						if(stat != nullptr)
 						{
-							loop_count++;
+							fclose(stat);
 
-							min = std::min(min, count);
-							max = std::max(max, count);
+							int64_t count = _count;
+							_count = 0;
 
-							retry_min = std::min(retry_min, retry_count);
-							retry_max = std::max(retry_max, retry_count);
+							int64_t retry_count = _retry_count;
+							_retry_count = 0;
 
-							error_min = std::min(error_min, error_count);
-							error_max = std::max(error_max, error_count);
+							int64_t error_count = _error_count;
+							_error_count = 0;
 
-							int64_t average = _total_count / ((loop_count == 0) ? 1 : loop_count);
-							int64_t retry_average = _total_retry_count / ((loop_count == 0) ? 1 : loop_count);
-							int64_t error_average = _total_error_count / ((loop_count == 0) ? 1 : loop_count);
+							if((count > 0) || (retry_count) || (error_count > 0))
+							{
+								loop_count++;
 
-							logi("SockStat",
-							     "[Stats Counter] Total sampling count: %ld\n"
-							     "+-------+---------+---------+---------+---------+--------------+\n"
-							     "| Type  | Current |   Max   |   Min   | Average |    Total     |\n"
-							     "+-------+---------+---------+---------+---------+--------------+\n"
-							     "| PPS   | %7ld | %7ld | %7ld | %7ld | %12ld |\n"
-							     "| Retry | %7ld | %7ld | %7ld | %7ld | %12ld |\n"
-							     "| Error | %7ld | %7ld | %7ld | %7ld | %12ld |\n"
-							     "+-------+---------+---------+---------+---------+--------------+\n",
-							     loop_count,
-							     count, max, min, average, static_cast<int64_t>(_total_count),
-							     retry_count, retry_max, retry_min, retry_average, static_cast<int64_t>(_total_retry_count),
-							     error_count, error_max, error_min, error_average, static_cast<int64_t>(_total_error_count)
-							);
+								min = std::min(min, count);
+								max = std::max(max, count);
+
+								retry_min = std::min(retry_min, retry_count);
+								retry_max = std::max(retry_max, retry_count);
+
+								error_min = std::min(error_min, error_count);
+								error_max = std::max(error_max, error_count);
+
+								int64_t average = _total_count / ((loop_count == 0) ? 1 : loop_count);
+								int64_t retry_average = _total_retry_count / ((loop_count == 0) ? 1 : loop_count);
+								int64_t error_average = _total_error_count / ((loop_count == 0) ? 1 : loop_count);
+
+								logi("SockStat",
+								     "[Stats Counter] Total sampling count: %ld\n"
+								     "+-------+---------+---------+---------+---------+--------------+\n"
+								     "| Type  | Current |   Max   |   Min   | Average |    Total     |\n"
+								     "+-------+---------+---------+---------+---------+--------------+\n"
+								     "| PPS   | %7ld | %7ld | %7ld | %7ld | %12ld |\n"
+								     "| Retry | %7ld | %7ld | %7ld | %7ld | %12ld |\n"
+								     "| Error | %7ld | %7ld | %7ld | %7ld | %12ld |\n"
+								     "+-------+---------+---------+---------+---------+--------------+\n",
+								     loop_count,
+								     count, max, min, average, static_cast<int64_t>(_total_count),
+								     retry_count, retry_max, retry_min, retry_average, static_cast<int64_t>(_total_retry_count),
+								     error_count, error_max, error_min, error_average, static_cast<int64_t>(_total_error_count)
+								);
+							}
 						}
 
 						sleep(1);
@@ -146,12 +158,16 @@ namespace ov
 
 	static StatsCounter stats_counter;
 #endif // USE_STATS_COUNTER
+	// ====================================================
 
 	Socket::Socket()
 	{
+		// ====================================================
+		// For testing purpose
 #if USE_STATS_COUNTER
 		stats_counter.StartTracking();
 #endif // USE_STATS_COUNTER
+		// ====================================================
 	}
 
 	// remote 정보가 들어왔으므로, connect상태로 간주함
@@ -1020,23 +1036,32 @@ namespace ov
 
 					if(result >= 0)
 					{
+						// ====================================================
+						// For testing purpose
 #if USE_STATS_COUNTER
 						stats_counter.IncreasePps();
 #endif // USE_STATS_COUNTER
+						// ====================================================
 					}
 					else
 					{
 						if(errno == EAGAIN)
 						{
+							// ====================================================
+							// For testing purpose
 #if USE_STATS_COUNTER
+							// ====================================================
 							stats_counter.IncreaseRetry();
 #endif // USE_STATS_COUNTER
 							continue;
 						}
 
+						// ====================================================
+						// For testing purpose
 #if USE_STATS_COUNTER
 						stats_counter.IncreaseError();
 #endif // USE_STATS_COUNTER
+						// ====================================================
 					}
 
 					return result;
